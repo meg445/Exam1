@@ -265,18 +265,21 @@ export async function downloadMeritList(students: Student[]) {
   meanRow.getCell(1).value = "SUBJECT MEAN SCORE"
   sheet.mergeCells(meanRow.number, 1, meanRow.number, 4)
 
-  // Add subject means and placeholder for levels
+  // Add subject means and their performance levels
   for (let i = 0; i < SUBJECTS.length; i++) {
     const subj = SUBJECTS[i]
     const scoreCol = firstSubjectCol + i * 2
     const levelCol = scoreCol + 1
 
+    const mean = subjectMean(students, subj)
+    const level = getPerformanceLevel(mean)
+
     const cell = meanRow.getCell(scoreCol)
-    cell.value = Number(subjectMean(students, subj).toFixed(2))
+    cell.value = Number(mean.toFixed(2))
     cell.numFmt = "0.00"
 
     const levelCell = meanRow.getCell(levelCol)
-    levelCell.value = "—"
+    levelCell.value = level
   }
 
   // overall class mean in the Mean column
