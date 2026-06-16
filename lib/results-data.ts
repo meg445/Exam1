@@ -2,6 +2,10 @@
 
 export type PerformanceLevel = "EE" | "ME" | "AE" | "BE"
 
+// Junior School grade levels
+export const GRADES = ["Grade 7", "Grade 8", "Grade 9"] as const
+export type Grade = (typeof GRADES)[number]
+
 // The 9 official Junior School learning areas
 export const SUBJECTS = [
   "English",
@@ -301,3 +305,13 @@ export const SAMPLE_STUDENTS: Student[] = [
     },
   },
 ]
+
+// Build the starting roster for each grade. Grade 8 is seeded with the sample
+// class for demonstration; Grade 7 and Grade 9 start empty.
+export function createInitialGradeMap(): Record<Grade, Student[]> {
+  return {
+    "Grade 7": [],
+    "Grade 8": SAMPLE_STUDENTS.map((s) => ({ ...s, scores: { ...s.scores } })),
+    "Grade 9": [],
+  }
+}
