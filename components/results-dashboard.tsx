@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { DownloadMeritButton } from "@/components/download-merit-button"
 import { MeritTable } from "@/components/merit-table"
 import { MarksEditor } from "@/components/marks-editor"
+import { MarksImport } from "@/components/marks-import"
 import {
   computeResults,
   createEmptyStudent,
@@ -69,6 +70,13 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
               </div>
             </Card>
           ))}
+        </section>
+
+        {/* Excel import / template */}
+        <section aria-label="Import marks from Excel" className="mt-8">
+          <Card className="p-5">
+            <MarksImport students={students} onImport={setStudents} />
+          </Card>
         </section>
 
         {/* Marks input */}
