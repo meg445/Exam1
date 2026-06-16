@@ -5,6 +5,7 @@ import {
   subjectMean,
   subjectDistribution,
   createEmptyStudent,
+  getPerformanceLevel,
   type Student,
   type Subject,
   type PerformanceLevel,
@@ -177,7 +178,7 @@ export async function parseMarksWorkbook(file: File): Promise<Student[]> {
   return students
 }
 
-// Generate and trigger download of the compiled merit list workbook
+// Generate and trigger download of the compiled merit list workbook with Score/Level pairs
 export async function downloadMeritList(students: Student[]) {
   const results = computeResults(students)
 
@@ -189,17 +190,26 @@ export async function downloadMeritList(students: Student[]) {
     views: [{ state: "frozen", ySplit: 1 }],
   })
 
-  // ---- Column definitions ----
+  // ---- Column definitions with Score/Level pairs for each subject ----
   const columns: Partial<ExcelJS.Column>[] = [
     { header: "Rank", key: "rank", width: 8 },
     { header: "Admission No.", key: "adm", width: 16 },
     { header: "Student Full Name", key: "name", width: 26 },
     { header: "Gender", key: "gender", width: 10 },
-    ...SUBJECTS.map((subj) => ({ header: subj, key: subj, width: 14 })),
+  ]
+
+  // Add Score and Level columns for each subject
+  for (const subj of SUBJECTS) {
+    columns.push({ header: `${subj} (Score)`, key: `${subj}_score`, width: 12 })
+    columns.push({ header: `${subj} (Level)`, key: `${subj}_level`, width: 12 })
+  }
+
+  columns.push(
     { header: "Total Marks", key: "total", width: 13 },
     { header: "Mean Score", key: "mean", width: 12 },
     { header: "Performance Level", key: "level", width: 17 },
-  ]
+  )
+
   sheet.columns = columns
 
   // ---- Header row styling ----
@@ -223,7 +233,14 @@ export async function downloadMeritList(students: Student[]) {
       mean: Number(r.mean.toFixed(2)),
       level: r.level,
     }
-    for (const subj of SUBJECTS) rowData[subj] = r.scores[subj]
+
+    // Add score and level for each subject
+    for (const subj of SUBJECTS) {
+      const score = r.scores[subj]
+      const level = getPerformanceLevel(score)
+      rowData[`${subj}_score`] = score
+      rowData[`${subj}_level`] = level
+    }
 
     const row = sheet.addRow(rowData)
     row.eachCell((cell, colNumber) => {
@@ -240,17 +257,28 @@ export async function downloadMeritList(students: Student[]) {
   // ---- Spacer row ----
   sheet.addRow([])
 
-  const firstSubjectCol = 5 // column E (after Rank, Adm, Name, Gender)
+  // Calculate first subject score column (after Rank, Adm, Name, Gender = columns 1-4)
+  const firstSubjectCol = 5
 
   // ---- Subject Mean Score row ----
   const meanRow = sheet.addRow([])
   meanRow.getCell(1).value = "SUBJECT MEAN SCORE"
   sheet.mergeCells(meanRow.number, 1, meanRow.number, 4)
-  SUBJECTS.forEach((subj, i) => {
-    const cell = meanRow.getCell(firstSubjectCol + i)
+
+  // Add subject means and placeholder for levels
+  for (let i = 0; i < SUBJECTS.length; i++) {
+    const subj = SUBJECTS[i]
+    const scoreCol = firstSubjectCol + i * 2
+    const levelCol = scoreCol + 1
+
+    const cell = meanRow.getCell(scoreCol)
     cell.value = Number(subjectMean(students, subj).toFixed(2))
     cell.numFmt = "0.00"
-  })
+
+    const levelCell = meanRow.getCell(levelCol)
+    levelCell.value = "—"
+  }
+
   // overall class mean in the Mean column
   const classMean =
     results.reduce((acc, r) => acc + r.mean, 0) / (results.length || 1)
@@ -264,10 +292,20 @@ export async function downloadMeritList(students: Student[]) {
     const distRow = sheet.addRow([])
     distRow.getCell(1).value = `No. of ${level}`
     sheet.mergeCells(distRow.number, 1, distRow.number, 4)
-    SUBJECTS.forEach((subj, i) => {
+
+    for (let i = 0; i < SUBJECTS.length; i++) {
+      const subj = SUBJECTS[i]
       const dist = subjectDistribution(students, subj)
-      distRow.getCell(firstSubjectCol + i).value = dist[level]
-    })
+      const scoreCol = firstSubjectCol + i * 2
+      const levelCol = scoreCol + 1
+
+      const cell = distRow.getCell(scoreCol)
+      cell.value = dist[level]
+
+      const levelCell = distRow.getCell(levelCol)
+      levelCell.value = "—"
+    }
+
     styleSummaryRow(distRow, LEVEL_FILL, false)
   }
 
