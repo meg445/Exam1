@@ -23,11 +23,23 @@ import {
   type Grade,
 } from "@/lib/results-data"
 
+interface GradeData {
+  students: Student[]
+}
+
+type GradeMap = Record<Grade, GradeData>
+
 export function ResultsDashboard({ initialStudents }: { initialStudents: Student[] }) {
-  const [students, setStudents] = useState<Student[]>(initialStudents)
+  const [gradeMap, setGradeMap] = useState<GradeMap>({
+    "Grade 7": { students: [] },
+    "Grade 8": { students: initialStudents },
+    "Grade 9": { students: [] },
+  })
   const [selectedGrade, setSelectedGrade] = useState<Grade>("Grade 8")
 
-  const results = useMemo(() => computeResults(students), [students])
+  const currentStudents = gradeMap[selectedGrade].students
+  
+  const results = useMemo(() => computeResults(currentStudents), [currentStudents])
   const classMean = results.length
     ? results.reduce((acc, r) => acc + r.mean, 0) / results.length
     : 0
@@ -40,6 +52,29 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
     { label: "Top Performer", value: topStudent?.fullName || "—", icon: Award },
     { label: "Exceeding Expectation", value: `${eeCount} learners`, icon: GraduationCap },
   ]
+
+  const handleStudentsChange = (newStudents: Student[]) => {
+    setGradeMap((prev) => ({
+      ...prev,
+      [selectedGrade]: { students: newStudents },
+    }))
+  }
+
+  const handleAddStudent = () => {
+    handleStudentsChange([...currentStudents, createEmptyStudent()])
+  }
+
+  const handleResetStudents = () => {
+    if (selectedGrade === "Grade 8") {
+      handleStudentsChange(initialStudents)
+    } else {
+      handleStudentsChange([])
+    }
+  }
+
+  const handleGradeChange = (grade: Grade) => {
+    setSelectedGrade(grade)
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -60,7 +95,7 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
             </div>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <Select value={selectedGrade} onValueChange={(value) => setSelectedGrade(value as Grade)}>
+            <Select value={selectedGrade} onValueChange={handleGradeChange}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -72,7 +107,7 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
                 ))}
               </SelectContent>
             </Select>
-            <DownloadMeritButton students={students} />
+            <DownloadMeritButton students={currentStudents} />
           </div>
         </div>
       </header>
@@ -99,7 +134,7 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
         {/* Excel import / template */}
         <section aria-label="Import marks from Excel" className="mt-8">
           <Card className="p-5">
-            <MarksImport students={students} onImport={setStudents} />
+            <MarksImport students={currentStudents} onImport={handleStudentsChange} />
           </Card>
         </section>
 
@@ -107,10 +142,10 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
         <section aria-label="Enter learner marks" className="mt-8">
           <Card className="p-5">
             <MarksEditor
-              students={students}
-              onChange={setStudents}
-              onAdd={() => setStudents((prev) => [...prev, createEmptyStudent()])}
-              onReset={() => setStudents(initialStudents)}
+              students={currentStudents}
+              onChange={handleStudentsChange}
+              onAdd={handleAddStudent}
+              onReset={handleResetStudents}
             />
           </Card>
         </section>
@@ -124,12 +159,12 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
               subject averages and grade distribution.
             </p>
           </div>
-          {students.length === 0 ? (
+          {currentStudents.length === 0 ? (
             <Card className="p-10 text-center text-sm text-muted-foreground">
               Add learners above to generate the merit list.
             </Card>
           ) : (
-            <MeritTable students={students} />
+            <MeritTable students={currentStudents} />
           )}
         </section>
 
