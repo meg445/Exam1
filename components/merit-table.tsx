@@ -13,6 +13,7 @@ import {
   computeResults,
   subjectMean,
   subjectDistribution,
+  getPerformanceLevel,
   type Student,
   type PerformanceLevel,
 } from "@/lib/results-data"
@@ -44,9 +45,11 @@ export function MeritTable({ students }: { students: Student[] }) {
             {SUBJECTS.map((subj) => (
               <TableHead
                 key={subj}
-                className="whitespace-nowrap text-center text-secondary-foreground"
+                colSpan={2}
+                className="border-l border-border text-center text-secondary-foreground"
               >
-                {subj}
+                <div className="whitespace-nowrap">{subj}</div>
+                <div className="text-xs font-normal text-muted-foreground">Score / Level</div>
               </TableHead>
             ))}
             <TableHead className="text-center text-secondary-foreground">Total</TableHead>
@@ -65,11 +68,29 @@ export function MeritTable({ students }: { students: Student[] }) {
               </TableCell>
               <TableCell className="whitespace-nowrap font-medium">{r.fullName}</TableCell>
               <TableCell className="text-muted-foreground">{r.gender}</TableCell>
-              {SUBJECTS.map((subj) => (
-                <TableCell key={subj} className="text-center tabular-nums">
-                  {r.scores[subj]}
-                </TableCell>
-              ))}
+              {SUBJECTS.map((subj) => {
+                const score = r.scores[subj]
+                const level = getPerformanceLevel(score)
+                return (
+                  <TableCell key={`${subj}-score`} className="border-l border-border/50 text-center tabular-nums">
+                    {score}
+                  </TableCell>
+                )
+              })}
+              {SUBJECTS.map((subj) => {
+                const score = r.scores[subj]
+                const level = getPerformanceLevel(score)
+                return (
+                  <TableCell key={`${subj}-level`} className="text-center">
+                    <Badge
+                      variant="outline"
+                      className={cn("font-semibold text-xs", levelStyles[level])}
+                    >
+                      {level}
+                    </Badge>
+                  </TableCell>
+                )
+              })}
               <TableCell className="text-center font-semibold tabular-nums">
                 {r.total}
               </TableCell>
@@ -90,8 +111,13 @@ export function MeritTable({ students }: { students: Student[] }) {
               Subject Mean Score
             </TableCell>
             {SUBJECTS.map((subj) => (
-              <TableCell key={subj} className="text-center tabular-nums">
+              <TableCell key={`mean-${subj}`} className="border-l border-border/50 text-center tabular-nums">
                 {subjectMean(students, subj).toFixed(2)}
+              </TableCell>
+            ))}
+            {SUBJECTS.map((subj) => (
+              <TableCell key={`mean-level-${subj}`} className="text-center text-muted-foreground text-sm">
+                —
               </TableCell>
             ))}
             <TableCell />
@@ -108,11 +134,16 @@ export function MeritTable({ students }: { students: Student[] }) {
               {SUBJECTS.map((subj) => {
                 const dist = subjectDistribution(students, subj)
                 return (
-                  <TableCell key={subj} className="text-center tabular-nums text-muted-foreground">
+                  <TableCell key={`dist-${subj}`} className="border-l border-border/50 text-center tabular-nums text-muted-foreground">
                     {dist[level]}
                   </TableCell>
                 )
               })}
+              {SUBJECTS.map((subj) => (
+                <TableCell key={`dist-level-${subj}`} className="text-center text-muted-foreground">
+                  —
+                </TableCell>
+              ))}
               <TableCell />
               <TableCell />
               <TableCell />
