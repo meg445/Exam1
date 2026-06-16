@@ -51,6 +51,23 @@ export function getPerformanceLevel(score: number): PerformanceLevel {
   return "BE"
 }
 
+// Create a blank student with all subject scores set to 0
+export function createEmptyStudent(): Student {
+  const scores = SUBJECTS.reduce(
+    (acc, subj) => {
+      acc[subj] = 0
+      return acc
+    },
+    {} as Record<Subject, number>,
+  )
+  return {
+    admissionNumber: "",
+    fullName: "",
+    gender: "Male",
+    scores,
+  }
+}
+
 // Build ranked results from raw students: total, mean, level, rank (highest mean first)
 export function computeResults(students: Student[]): StudentResult[] {
   const withMetrics = students.map((s) => {
