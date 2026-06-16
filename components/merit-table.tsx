@@ -49,7 +49,6 @@ export function MeritTable({ students }: { students: Student[] }) {
                 className="border-l border-border text-center text-secondary-foreground"
               >
                 <div className="whitespace-nowrap">{subj}</div>
-                <div className="text-xs font-normal text-muted-foreground">Score / Level</div>
               </TableHead>
             ))}
             <TableHead className="text-center text-secondary-foreground">Total</TableHead>
@@ -72,23 +71,19 @@ export function MeritTable({ students }: { students: Student[] }) {
                 const score = r.scores[subj]
                 const level = getPerformanceLevel(score)
                 return (
-                  <TableCell key={`${subj}-score`} className="border-l border-border/50 text-center tabular-nums">
-                    {score}
-                  </TableCell>
-                )
-              })}
-              {SUBJECTS.map((subj) => {
-                const score = r.scores[subj]
-                const level = getPerformanceLevel(score)
-                return (
-                  <TableCell key={`${subj}-level`} className="text-center">
-                    <Badge
-                      variant="outline"
-                      className={cn("font-semibold text-xs", levelStyles[level])}
-                    >
-                      {level}
-                    </Badge>
-                  </TableCell>
+                  <div key={subj} className="contents">
+                    <TableCell className="border-l border-border/50 text-center tabular-nums">
+                      {score}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="outline"
+                        className={cn("font-semibold text-xs", levelStyles[level])}
+                      >
+                        {level}
+                      </Badge>
+                    </TableCell>
+                  </div>
                 )
               })}
               <TableCell className="text-center font-semibold tabular-nums">
@@ -111,14 +106,14 @@ export function MeritTable({ students }: { students: Student[] }) {
               Subject Mean Score
             </TableCell>
             {SUBJECTS.map((subj) => (
-              <TableCell key={`mean-${subj}`} className="border-l border-border/50 text-center tabular-nums">
-                {subjectMean(students, subj).toFixed(2)}
-              </TableCell>
-            ))}
-            {SUBJECTS.map((subj) => (
-              <TableCell key={`mean-level-${subj}`} className="text-center text-muted-foreground text-sm">
-                —
-              </TableCell>
+              <div key={subj} className="contents">
+                <TableCell className="border-l border-border/50 text-center tabular-nums">
+                  {subjectMean(students, subj).toFixed(2)}
+                </TableCell>
+                <TableCell className="text-center text-muted-foreground text-sm">
+                  —
+                </TableCell>
+              </div>
             ))}
             <TableCell />
             <TableCell className="text-center tabular-nums">{classMean.toFixed(2)}</TableCell>
@@ -134,16 +129,16 @@ export function MeritTable({ students }: { students: Student[] }) {
               {SUBJECTS.map((subj) => {
                 const dist = subjectDistribution(students, subj)
                 return (
-                  <TableCell key={`dist-${subj}`} className="border-l border-border/50 text-center tabular-nums text-muted-foreground">
-                    {dist[level]}
-                  </TableCell>
+                  <div key={subj} className="contents">
+                    <TableCell className="border-l border-border/50 text-center tabular-nums text-muted-foreground">
+                      {dist[level]}
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">
+                      —
+                    </TableCell>
+                  </div>
                 )
               })}
-              {SUBJECTS.map((subj) => (
-                <TableCell key={`dist-level-${subj}`} className="text-center text-muted-foreground">
-                  —
-                </TableCell>
-              ))}
               <TableCell />
               <TableCell />
               <TableCell />
