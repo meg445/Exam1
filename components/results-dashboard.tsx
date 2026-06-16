@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { GraduationCap, Users, TrendingUp, Award } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import {
@@ -14,6 +14,8 @@ import { DownloadMeritButton } from "@/components/download-merit-button"
 import { MeritTable } from "@/components/merit-table"
 import { MarksEditor } from "@/components/marks-editor"
 import { MarksImport } from "@/components/marks-import"
+import { PrintButton } from "@/components/print-button"
+import { AutosaveIndicator, type AutosaveStatus } from "@/components/autosave-indicator"
 import {
   computeResults,
   createEmptyStudent,
@@ -22,6 +24,7 @@ import {
   type Student,
   type Grade,
 } from "@/lib/results-data"
+import { saveToLocalStorage, loadFromLocalStorage, getAutosaveInterval } from "@/lib/autosave"
 
 interface GradeData {
   students: Student[]
@@ -36,9 +39,57 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
     "Grade 9": { students: [] },
   })
   const [selectedGrade, setSelectedGrade] = useState<Grade>("Grade 8")
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle")
+  const [lastSavedTime, setLastSavedTime] = useState<Date | undefined>()
+  const autosaveTimerRef = useRef<NodeJS.Timeout>()
+
+  // Load from local storage on mount
+  useEffect(() => {
+    const saved = loadFromLocalStorage()
+    if (saved) {
+      setGradeMap(saved.gradeMap)
+      setSelectedGrade(saved.selectedGrade)
+      setLastSavedTime(new Date(saved.lastSaved))
+    }
+  }, [])
+
+  // Autosave effect
+  useEffect(() => {
+    // Clear existing timer
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current)
+    }
+
+    setAutosaveStatus("saving")
+
+    // Set new timer
+    autosaveTimerRef.current = setTimeout(() => {
+      try {
+        saveToLocalStorage({
+          gradeMap,
+          selectedGrade,
+          lastSaved: Date.now(),
+        })
+        setAutosaveStatus("saved")
+        setLastSavedTime(new Date())
+
+        // Reset status after 3 seconds
+        setTimeout(() => setAutosaveStatus("idle"), 3000)
+      } catch (error) {
+        console.error("Autosave failed:", error)
+        setAutosaveStatus("error")
+      }
+    }, getAutosaveInterval())
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current)
+      }
+    }
+  }, [gradeMap, selectedGrade])
 
   const currentStudents = gradeMap[selectedGrade].students
-  
+
   const results = useMemo(() => computeResults(currentStudents), [currentStudents])
   const classMean = results.length
     ? results.reduce((acc, r) => acc + r.mean, 0) / results.length
@@ -107,7 +158,11 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
                 ))}
               </SelectContent>
             </Select>
-            <DownloadMeritButton students={currentStudents} />
+            <div className="flex items-center gap-2">
+              <AutosaveIndicator status={autosaveStatus} lastSavedTime={lastSavedTime} />
+              <PrintButton />
+              <DownloadMeritButton students={currentStudents} />
+            </div>
           </div>
         </div>
       </header>
@@ -187,6 +242,21 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
           </Card>
         </section>
       </div>
+
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          header {
+            display: none;
+          }
+          main {
+            background: white;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
     </main>
   )
 }
