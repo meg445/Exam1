@@ -3,6 +3,13 @@
 import { useMemo, useState } from "react"
 import { GraduationCap, Users, TrendingUp, Award } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { DownloadMeritButton } from "@/components/download-merit-button"
 import { MeritTable } from "@/components/merit-table"
 import { MarksEditor } from "@/components/marks-editor"
@@ -11,11 +18,14 @@ import {
   computeResults,
   createEmptyStudent,
   getPerformanceLevel,
+  GRADES,
   type Student,
+  type Grade,
 } from "@/lib/results-data"
 
 export function ResultsDashboard({ initialStudents }: { initialStudents: Student[] }) {
   const [students, setStudents] = useState<Student[]>(initialStudents)
+  const [selectedGrade, setSelectedGrade] = useState<Grade>("Grade 8")
 
   const results = useMemo(() => computeResults(students), [students])
   const classMean = results.length
@@ -45,11 +55,25 @@ export function ResultsDashboard({ initialStudents }: { initialStudents: Student
                 Junior School Results Analysis
               </h1>
               <p className="text-sm text-muted-foreground">
-                Grade 8 — Eagle Stream · End of Term Assessment
+                {selectedGrade} — Eagle Stream · End of Term Assessment
               </p>
             </div>
           </div>
-          <DownloadMeritButton students={students} />
+          <div className="flex flex-col items-end gap-3">
+            <Select value={selectedGrade} onValueChange={(value) => setSelectedGrade(value as Grade)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADES.map((grade) => (
+                  <SelectItem key={grade} value={grade}>
+                    {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <DownloadMeritButton students={students} />
+          </div>
         </div>
       </header>
 
