@@ -10,7 +10,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Junior School Results Analysis',
+  title: 'JUNIOR SCHOOL ANALYSIS',
   description:
     'Analyze Kenyan Junior School assessment results and export a compiled merit list to Excel.',
   generator: 'v0.app',
