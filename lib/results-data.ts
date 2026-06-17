@@ -3,7 +3,7 @@
 export type PerformanceLevel = "EE" | "ME" | "AE" | "BE"
 
 // Junior School grade levels
-export const GRADES = ["Grade 7", "Grade 8", "Grade 9"] as const
+export const GRADES = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"] as const
 export type Grade = (typeof GRADES)[number]
 
 // The 9 official Junior School learning areas
@@ -24,7 +24,6 @@ export type Subject = (typeof SUBJECTS)[number]
 export interface Student {
   admissionNumber: string
   fullName: string
-  gender: "Male" | "Female"
   scores: Record<Subject, number>
 }
 
