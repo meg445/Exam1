@@ -1,8 +1,11 @@
-// Kenyan Junior School (Grade 7-9 / JSS) Results Analysis - data model & helpers
+// Emley Junior School (Grade 7-9) & Emley Senior Elite School (Grade 10) Results Analysis - data model & helpers
 
-export type PerformanceLevel = "EE" | "ME" | "AE" | "BE"
+export type PerformanceLevel = 
+  | "EE1" | "EE2" 
+  | "ME1" | "ME2" 
+  | "AE1" | "AE2" 
+  | "BE1" | "BE2"
 
-// Junior School grade levels
 export const GRADES = ["Grade 7", "Grade 8", "Grade 9", "Grade 10"] as const
 export type Grade = (typeof GRADES)[number]
 
@@ -24,6 +27,7 @@ export type Subject = (typeof SUBJECTS)[number]
 export interface Student {
   admissionNumber: string
   fullName: string
+  gender: "Male" | "Female" // Added to resolve the error in createEmptyStudent
   scores: Record<Subject, number>
 }
 
@@ -34,14 +38,13 @@ export interface StudentResult extends Student {
   rank: number
 }
 
-// CBC competency bands (score out of 100)
+// CBC 8-point competency bands
 export const PERFORMANCE_LEVELS: {
   level: PerformanceLevel
   label: string
   min: number
   max: number
 }[] = [
-  export const performanceRubric = [
   { level: "EE1", label: "Exceeding Expectation 1", min: 90, max: 100 },
   { level: "EE2", label: "Exceeding Expectation 2", min: 75, max: 89 },
   { level: "ME1", label: "Meeting Expectation 1", min: 58, max: 74 },
@@ -50,17 +53,17 @@ export const PERFORMANCE_LEVELS: {
   { level: "AE2", label: "Approaching Expectation 2", min: 21, max: 30 },
   { level: "BE1", label: "Below Expectation 1", min: 11, max: 20 },
   { level: "BE2", label: "Below Expectation 2", min: 0, max: 10 },
-];
+]
 
-export function getPerformanceLevel(score: number): string {
-  if (score >= 90) return "EE1";
-  if (score >= 75) return "EE2";
-  if (score >= 58) return "ME1";
-  if (score >= 41) return "ME2";
-  if (score >= 31) return "AE1";
-  if (score >= 21) return "AE2";
-  if (score >= 11) return "BE1";
-  return "BE2";
+export function getPerformanceLevel(score: number): PerformanceLevel {
+  if (score >= 90) return "EE1"
+  if (score >= 75) return "EE2"
+  if (score >= 58) return "ME1"
+  if (score >= 41) return "ME2"
+  if (score >= 31) return "AE1"
+  if (score >= 21) return "AE2"
+  if (score >= 11) return "BE1"
+  return "BE2"
 }
 
 // Create a blank student with all subject scores set to 0
@@ -111,22 +114,27 @@ export function subjectDistribution(
   students: Student[],
   subject: Subject,
 ): Record<PerformanceLevel, number> {
-  const dist: Record<PerformanceLevel, number> = { EE: 0, ME: 0, AE: 0, BE: 0 }
+  const dist: Record<PerformanceLevel, number> = { 
+    EE1: 0, EE2: 0, 
+    ME1: 0, ME2: 0, 
+    AE1: 0, AE2: 0, 
+    BE1: 0, BE2: 0 
+  }
+  
   for (const s of students) {
     dist[getPerformanceLevel(s.scores[subject])] += 1
   }
   return dist
 }
 
-
-]
-
 // Build the starting roster for each grade. Grade 8 is seeded with the sample
-// class for demonstration; Grade 7 and Grade 9 start empty.
+// class for demonstration; Grade 7, 9, and 10 start empty.
+// (Assuming SAMPLE_STUDENTS is imported or defined elsewhere in your file)
 export function createInitialGradeMap(): Record<Grade, Student[]> {
   return {
     "Grade 7": [],
     "Grade 8": SAMPLE_STUDENTS.map((s) => ({ ...s, scores: { ...s.scores } })),
     "Grade 9": [],
+    "Grade 10": [],
   }
 }
