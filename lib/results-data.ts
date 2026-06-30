@@ -41,17 +41,26 @@ export const PERFORMANCE_LEVELS: {
   min: number
   max: number
 }[] = [
-  { level: "EE", label: "Exceeding Expectation", min: 76, max: 100 },
-  { level: "ME", label: "Meeting Expectation", min: 51, max: 75 },
-  { level: "AE", label: "Approaching Expectation", min: 26, max: 50 },
-  { level: "BE", label: "Below Expectation", min: 0, max: 25 },
-]
+  export const performanceRubric = [
+  { level: "EE1", label: "Exceeding Expectation 1", min: 90, max: 100 },
+  { level: "EE2", label: "Exceeding Expectation 2", min: 75, max: 89 },
+  { level: "ME1", label: "Meeting Expectation 1", min: 58, max: 74 },
+  { level: "ME2", label: "Meeting Expectation 2", min: 41, max: 57 },
+  { level: "AE1", label: "Approaching Expectation 1", min: 31, max: 40 },
+  { level: "AE2", label: "Approaching Expectation 2", min: 21, max: 30 },
+  { level: "BE1", label: "Below Expectation 1", min: 11, max: 20 },
+  { level: "BE2", label: "Below Expectation 2", min: 0, max: 10 },
+];
 
-export function getPerformanceLevel(score: number): PerformanceLevel {
-  if (score >= 76) return "EE"
-  if (score >= 51) return "ME"
-  if (score >= 26) return "AE"
-  return "BE"
+export function getPerformanceLevel(score: number): string {
+  if (score >= 90) return "EE1";
+  if (score >= 75) return "EE2";
+  if (score >= 58) return "ME1";
+  if (score >= 41) return "ME2";
+  if (score >= 31) return "AE1";
+  if (score >= 21) return "AE2";
+  if (score >= 11) return "BE1";
+  return "BE2";
 }
 
 // Create a blank student with all subject scores set to 0
